@@ -22,6 +22,24 @@ email to <martin.dong@139..com> for help. \n\
 Type 'q' or 'quit' to exit the program.\n\
 ------------------------------------------------\n"
 // Please make your choice:"
+enum JSON_Type {
+    JNull=0,
+    JString=1,
+    JNumber=2,
+    JObject=3,
+    JArray=4,
+    JBool=5
+};
+
+typedef struct JSON_Object_st {
+    enum JSON_Type j_type;
+    char* j_key;
+    char* s_value;
+    int i_value;
+    bool b_value;
+    void* next;
+} JSON_object;
+
 
 int help()
 {
@@ -76,10 +94,72 @@ int main(int argc, char** argv) {
         {
             char* payload = "{\"code\":\"\",\"codeUuid\":\"\",\"loginName\":\"dongjin@utry.cn\",\"loginPwd\":\"123456\"}";
             http_response *resp = http_post("https://utmpapi.utry.cn/utmp-admin-api/session/login", NULL, payload);
-            // X_LOG_DEBUG("http_response [%d] is: %s\n", resp->size, resp->response);
+            X_LOG_DEBUG("http_response [%d] is: %s", resp->size, resp->response);
             char *tokenVal = strstr(resp->response, "xaccessToken");
             tokenVal--;
             tokenVal = strtrim(tokenVal, '}');
+
+            // Parsing json
+            // +
+            char* json_head = (char*)malloc(sizeof(char)*(resp->size+1));
+            char* json = json_head;
+            memset(json, 0, resp->size+1);
+            memcpy(json, resp->response, resp->size+1);
+            
+            char** json_objects_head = (char**)calloc(sizeof(char*), MAX_OSMP_JSON_SIZE);
+            char** json_objects = json_objects_head;
+
+            *json_objects_head = json_head;
+            // X_LOG_DEBUG(">>>>>>>>>>>>> %s", *json_objects_head);
+            
+            int a = 0;
+            while(*json) {
+                if(*json == '{') {
+                    a++;
+                    *json_objects = json;
+                    json_objects++;
+                } 
+                else if (*json == '[')
+                {
+                    while (1)
+                    {
+                        json++;
+                        if (*json != ']')
+                        {
+                            continue;
+                        } else {
+                            json++;
+                            break;
+                        }
+                    }
+                    X_LOG_DEBUG("exit [] branch.");
+                    X_LOG_DEBUG(">>>>>>>>>>> %s", json);
+                }
+                // X_LOG_DEBUG(">>>>>>>>>>> %s", json);
+                json++;
+            }
+
+            json_objects = json_objects_head;
+
+            int abiii=0;
+            while (*json_objects)
+            {
+                /* code */
+                X_LOG_DEBUG("+++++++++++++++++++++++++++++++++++++++++++++++");
+                X_LOG_DEBUG("%s", *json_objects);
+                json_objects++;
+                X_LOG_DEBUG("-----------------------------------------------");
+                abiii++;
+                if (abiii>10)
+                {
+                    break;
+                    /* code */
+                }
+            }
+            
+            X_LOG_DEBUG("%d", a);
+
+            // -
 
             char** p0 = (char**)malloc(sizeof(char**));
             *p0 = tokenVal;
@@ -89,17 +169,17 @@ int main(int argc, char** argv) {
             x_access_key = strtrim(x_access_key, '\"');
             X_LOG_DEBUG("xaccessToken is [%d]%s\n", strlen(x_access_key), x_access_key);
 
-            payload = "{\"orders\":[],\"pageNum\":1,\"pageSize\":1000,\"queryLike\":\"\",\"ssascription\":[\"2097164\",\"2097123\",\"2097173\",\"2097177\",\"2097179\",\"2097180\",\"2341059\",\"2920991\",\"3167706\"],\"status\":[]}";
-            http_response *resp1 = http_post("https://utmpapi.utry.cn//utmp-admin-api/project/page/query", x_access_key, payload);
-            printf("response [%d]%s\n", resp1->size, resp1->response);
-            free(resp1->response);
-            free(resp1);
+            // payload = "{\"orders\":[],\"pageNum\":1,\"pageSize\":1000,\"queryLike\":\"\",\"ssascription\":[\"2097164\",\"2097123\",\"2097173\",\"2097177\",\"2097179\",\"2097180\",\"2341059\",\"2920991\",\"3167706\"],\"status\":[]}";
+            // http_response *resp1 = http_post("https://utmpapi.utry.cn//utmp-admin-api/project/page/query", x_access_key, payload);
+            // printf("response [%d]%s\n", resp1->size, resp1->response);
+            // free(resp1->response);
+            // free(resp1);
 
-            payload = "{\"orders\":[],\"pageNum\":2,\"pageSize\":1000,\"queryLike\":\"\",\"ssascription\":[\"2097164\",\"2097123\",\"2097173\",\"2097177\",\"2097179\",\"2097180\",\"2341059\",\"2920991\",\"3167706\"],\"status\":[]}";
-            http_response *resp2 = http_post("https://utmpapi.utry.cn//utmp-admin-api/project/page/query", x_access_key, payload);
-            printf("response [%d]%s\n", resp2->size, resp2->response);
-            free(resp2->response);
-            free(resp2);
+            // payload = "{\"orders\":[],\"pageNum\":2,\"pageSize\":1000,\"queryLike\":\"\",\"ssascription\":[\"2097164\",\"2097123\",\"2097173\",\"2097177\",\"2097179\",\"2097180\",\"2341059\",\"2920991\",\"3167706\"],\"status\":[]}";
+            // http_response *resp2 = http_post("https://utmpapi.utry.cn//utmp-admin-api/project/page/query", x_access_key, payload);
+            // printf("response [%d]%s\n", resp2->size, resp2->response);
+            // free(resp2->response);
+            // free(resp2);
         }
         else if (*in_selection == '4') 
         {
