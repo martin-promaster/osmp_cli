@@ -7,9 +7,6 @@
 #include "../include/xsql.h"
 #include "../include/pmscore.h"
 
-#define PMS_LOG(X) printf("[%s %s] [DEBUG] %s\n", __DATE__, __TIME__, X)
-
-
 /*--------------------------------------------------
 	Application methods.
 --------------------------------------------------*/
@@ -32,19 +29,19 @@ int welcomeMessage() {
 		append_node(p_head, i, p);
 	}
 
-	PMS_LOG("Before created.");
+	X_LOG_DEBUG("Before created.");
 	for (linked_list* p = p_head->next; p != p_head; p = p->next) {
 		print_node(p);
 	}
 
-	PMS_LOG("After set the node.");
+	X_LOG_DEBUG("After set the node.");
 	set_node(p_head, 5, "Hahahaha........................");
 	set_node(p_head, 9, "Hohohoho........................");
 	for (linked_list* p = p_head->next; p != p_head; p = p->next) {
 		print_node(p);
 	}
 
-	PMS_LOG("The last node is:");
+	X_LOG_DEBUG("The last node is:");
 	linked_list* last_node = get_last_node(p_head);
 	print_node(last_node);
 }
@@ -65,3 +62,37 @@ int GenerateMailSecurityInfo(char* pSecurityInfo) {
 	strcpy(pSecurityInfo, originalPassword);
   	return strlen(pSecurityInfo);
 }
+
+/**
+    Filter c in src string, make a new string to 
+    hold the filtered.
+    @param src the original string terminated with \0
+    @param c character to be deleted.
+    @author Martin Dong <martin.dong@139.com>
+*/
+char* strtrim(char *src, char c) 
+{
+    char* output = (char*)malloc( strlen(src)*sizeof(char)+1 );
+    memset(output, 0, strlen(src));
+
+    char* in = src;
+    char* ot = output;
+    
+    while(*in) 
+    {
+        if (*in == c)
+        {
+            *in++;
+            continue;
+            /* code */
+        }
+        else
+        {
+            *ot = *in;
+            *ot++;
+            *in++;
+        }
+    }
+    return output;
+}
+

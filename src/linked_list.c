@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-
+#include "../include/xdefine.h"
 #include "../include/linked_list.h"
 
 linked_list* create_node() {
@@ -45,5 +45,5 @@ int append_node(linked_list* head, int index, char* name) {
 }
 
 int print_node(const linked_list* node) {
-	return printf("[%x] -> [%x] index:%d name:%s\n", node, node->next, node->index, node->name);
+	return X_LOG_DEBUG("[%x] -> [%x] index:%d name:%s", node, node->next, node->index, node->name);
 }

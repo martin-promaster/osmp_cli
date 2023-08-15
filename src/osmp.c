@@ -23,39 +23,6 @@ Type 'q' or 'quit' to exit the program.\n\
 ------------------------------------------------\n"
 // Please make your choice:"
 
-/**
-    Filter c in src string, make a new string to 
-    hold the filtered.
-    @param src the original string terminated with \0
-    @param c character to be deleted.
-    @author Martin Dong <martin.dong@139.com>
-*/
-char* strtrim(char *src, char c) 
-{
-    char* output = (char*)malloc( strlen(src)*sizeof(char)+1 );
-    memset(output, 0, strlen(src));
-
-    char* in = src;
-    char* ot = output;
-    
-    while(*in) 
-    {
-        if (*in == c)
-        {
-            *in++;
-            continue;
-            /* code */
-        }
-        else
-        {
-            *ot = *in;
-            *ot++;
-            *in++;
-        }
-    }
-    return output;
-}
-
 int help()
 {
     printf(MENU_MAIN);
@@ -104,9 +71,6 @@ int main(int argc, char** argv) {
         else if (*in_selection == '2') 
         {
             welcomeMessage();
-            char* p ="\"code\":\"xdfiesdf9iersdfk;asdfjnm\"";
-            X_LOG_DEBUG("Refore [%d] - %s", strlen(p), p);
-            X_LOG_DEBUG("After [%d] - %s", strlen(strtrim(p, '\"')), strtrim(p, '\"'));
         } 
         else if (*in_selection == '3') 
         {
@@ -123,10 +87,6 @@ int main(int argc, char** argv) {
             char* x_access_key = strsep(p0, ":");
             x_access_key = strsep(p0, ":");
             x_access_key = strtrim(x_access_key, '\"');
-            // char** token_arr;
-            // __strtok_r(tokenVal, ":", token_arr);
-            // X_LOG_DEBUG("%s", "__strtok_r()");
-            // char* replacementKey = strtrim(token_arr[0], '\"');
             X_LOG_DEBUG("xaccessToken is [%d]%s\n", strlen(x_access_key), x_access_key);
 
             payload = "{\"orders\":[],\"pageNum\":1,\"pageSize\":1000,\"queryLike\":\"\",\"ssascription\":[\"2097164\",\"2097123\",\"2097173\",\"2097177\",\"2097179\",\"2097180\",\"2341059\",\"2920991\",\"3167706\"],\"status\":[]}";
