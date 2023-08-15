@@ -4,6 +4,7 @@ USER_INC=-I./include
 PRJ_INC=-I${JDK8_INC} -I${JDK8_INC_LINUX} ${USER_INC}
 PRJ_LIBS=-L. -lpmscore -lcurl
 LIB_DIR=./lib
+BIN_DIR=./bin
 SRC = src/pmscore.c src/linked_list.c src/xsql.c src/xhttp.c
 OSMP_INC=-I./include -I/usr/include/curl
 OSMP_LIB=-L. -L/usr/lib64/mysql -lm -lcurl -lmysqlclient -lpmscore
@@ -15,6 +16,7 @@ CC=gcc
 all: osmp
 	rm -rf ${LIB_DIR}/*
 	mv *.so ${LIB_DIR}
+	mv osmp ${BIN_DIR}
 	
 osmp: libpmsinvoker.so
 	${CC} -g ${OSMP_INC} ${OSMP_LIB} -o osmp src/osmp.c
