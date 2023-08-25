@@ -3,6 +3,8 @@
 #include <ctype.h>
 #include <string.h>
 #include <assert.h>
+#include "../include/cJSON.h"
+#include "../include/cJSON_Utils.h"
 #include "/usr/include/mysql/mysql.h"
 #include "../include/pmscore.h"
 #include "../include/xsql.h"
@@ -159,32 +161,87 @@ int main(int argc, char** argv) {
         {
             char* payload = "{\"code\":\"\",\"codeUuid\":\"\",\"loginName\":\"dongjin@utry.cn\",\"loginPwd\":\"123456\"}";
             http_response *resp = http_post("https://utmpapi.utry.cn/utmp-admin-api/session/login", NULL, payload);
-            X_LOG_DEBUG("http_response [%d] is: %s", resp->size, resp->response);
-            char *tokenVal = strstr(resp->response, "xaccessToken");
-            tokenVal--;
-            tokenVal = strtrim(tokenVal, '}');
+            //X_LOG_DEBUG("http_response [%d] is: %s", resp->size, resp->response);
 
-            // Parsing json
-            // +
-            parse_json(resp->response, resp->size);
-            // -
+            // Retrival xaccessToken
+            char *x_access_token = NULL;
+            cJSON *json = cJSON_Parse(resp->response);
+            // if (json == NULL)
+            // {
+            //     const char *error_ptr = cJSON_GetErrorPtr();
+            //     if (error_ptr != NULL)
+            //     {
+            //         fprintf(stderr, "Error before: %s\n", error_ptr);
+            //     }
+            //     continue;
+            // }
+            cJSON *jdata = cJSON_GetObjectItemCaseSensitive(json, "data");
+            //X_LOG_DEBUG("Parsed by cJSON: %s", cJSON_Print(jdata));
+            cJSON *jaccessToken = cJSON_GetObjectItemCaseSensitive(jdata, "xaccessToken");
+            if (cJSON_IsString(jaccessToken) && (jaccessToken->valuestring != NULL))
+            {
+                size_t len = strlen(jaccessToken->valuestring);
+                x_access_token=(char*)malloc(sizeof(char*)*len);
+                memcpy(x_access_token, jaccessToken->valuestring, len);
+                X_LOG_DEBUG("Checking monitor \"%s\"\n", x_access_token);
+            }
+            free(json);
+            free(jdata);
+            free(jaccessToken);
 
-            char** p0 = (char**)malloc(sizeof(char**));
-            *p0 = tokenVal;
+
+            // char *tokenVal = strstr(resp->response, "xaccessToken");
+            // tokenVal--;
+            // tokenVal = strtrim(tokenVal, '}');
+
+            // // Parsing json
+            // // +
+            // parse_json(resp->response, resp->size);
+            // // -
+
+            // char** p0 = (char**)malloc(sizeof(char**));
+            // *p0 = tokenVal;
             
-            char* x_access_key = strsep(p0, ":");
-            x_access_key = strsep(p0, ":");
-            x_access_key = strtrim(x_access_key, '\"');
-            X_LOG_DEBUG("xaccessToken is [%d]%s\n", strlen(x_access_key), x_access_key);
+            // char* x_access_key = strsep(p0, ":");
+            // x_access_key = strsep(p0, ":");
+            // x_access_key = strtrim(x_access_key, '\"');
+            // X_LOG_DEBUG("xaccessToken is [%d]%s\n", strlen(x_access_key), x_access_key);
 
-            // payload = "{\"orders\":[],\"pageNum\":1,\"pageSize\":1000,\"queryLike\":\"\",\"ssascription\":[\"2097164\",\"2097123\",\"2097173\",\"2097177\",\"2097179\",\"2097180\",\"2341059\",\"2920991\",\"3167706\"],\"status\":[]}";
-            // http_response *resp1 = http_post("https://utmpapi.utry.cn//utmp-admin-api/project/page/query", x_access_key, payload);
-            // printf("response [%d]%s\n", resp1->size, resp1->response);
-            // free(resp1->response);
-            // free(resp1);
+            payload = "{\"orders\":[],\"pageNum\":1,\"pageSize\":1000,\"queryLike\":\"\",\"ssascription\":[\"2097164\",\"2097123\",\"2097173\",\"2097177\",\"2097179\",\"2097180\",\"2341059\",\"2920991\",\"3167706\"],\"status\":[]}";
+            http_response *resp1 = http_post("https://utmpapi.utry.cn//utmp-admin-api/project/page/query", x_access_token, payload);
+            json = cJSON_Parse(resp1->response);
+            if (json == NULL)
+            {
+                const char *error_ptr = cJSON_GetErrorPtr();
+                if (error_ptr != NULL)
+                {
+                    fprintf(stderr, "Error before: %s\n", error_ptr);
+                }
+                continue;
+            }
+            jdata = cJSON_GetObjectItemCaseSensitive(json, "data");
+            cJSON* jlists = cJSON_GetObjectItemCaseSensitive(jdata, "list");
+            cJSON* jlist = NULL;
+            cJSON_ArrayForEach(jlist, jlists)
+            {
+                cJSON *id = cJSON_GetObjectItemCaseSensitive(jlist, "id");
+                cJSON *name = cJSON_GetObjectItemCaseSensitive(jlist, "name");
+                //cJSON *height = cJSON_GetObjectItemCaseSensitive(jlist, "height");
+                X_LOG_DEBUG("%d %s", id->valueint, name->valuestring);
+            }
+            // for (size_t i = 1; i <= cJSON_GetArraySize(jlist); i++)
+            // {
+            //     X_LOG_DEBUG("process %d of %d", i, cJSON_GetArraySize(jlist));
+            //     cJSON* tmp = cJSON_GetArrayItem(jlist, i);
+            //     X_LOG_DEBUG("%s", cJSON_GetObjectItemCaseSensitive(tmp, "name"));
+            //     free(tmp);
+            // }
+            //X_LOG_DEBUG("response [%d]%s\n", resp1->size, resp1->response);
+            free(resp1->response);
+            free(resp1);
 
             // payload = "{\"orders\":[],\"pageNum\":2,\"pageSize\":1000,\"queryLike\":\"\",\"ssascription\":[\"2097164\",\"2097123\",\"2097173\",\"2097177\",\"2097179\",\"2097180\",\"2341059\",\"2920991\",\"3167706\"],\"status\":[]}";
-            // http_response *resp2 = http_post("https://utmpapi.utry.cn//utmp-admin-api/project/page/query", x_access_key, payload);
+            // http_response *resp2 = http_post("https://utmpapi.utry.cn//utmp-admin-api/project/page/query", x_access_token, payload);
             // printf("response [%d]%s\n", resp2->size, resp2->response);
             // free(resp2->response);
             // free(resp2);
