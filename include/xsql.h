@@ -14,5 +14,6 @@ MYSQL_RES* sql_real_query(MYSQL* my_conn, char* my_sql);
 SQL_FIELD_NAME_FMT sql_field_fmt_str(MYSQL_RES* res);
 
 int print_table_information(char* table_name);
+int osmp_mysql_real_query(const char* sql);
 
 #endif

@@ -107,6 +107,84 @@ void parse_json(const char* psrc, const size_t nsrc)
     X_LOG_DEBUG("%d", a);
 }
 
+char* osmp_retrival_utmp_access_token() 
+{
+    char* payload = "{\"code\":\"\",\"codeUuid\":\"\",\"loginName\":\"dongjin@utry.cn\",\"loginPwd\":\"123456\"}";
+    http_response *resp = http_post("https://utmpapi.utry.cn/utmp-admin-api/session/login", NULL, payload);
+    //X_LOG_DEBUG("http_response [%d] is: %s", resp->size, resp->response);
+
+    // Retrival xaccessToken
+    char *x_access_token = NULL;
+    cJSON *json = cJSON_Parse(resp->response);
+    if (json == NULL)
+    {
+        const char *error_ptr = cJSON_GetErrorPtr();
+        if (error_ptr != NULL)
+        {
+            fprintf(stderr, "Error before: %s\n", error_ptr);
+            return NULL;
+        }
+    }
+    cJSON *jdata = cJSON_GetObjectItemCaseSensitive(json, "data");
+    //X_LOG_DEBUG("Parsed by cJSON: %s", cJSON_Print(jdata));
+    cJSON *jaccessToken = cJSON_GetObjectItemCaseSensitive(jdata, "xaccessToken");
+    if (cJSON_IsString(jaccessToken) && (jaccessToken->valuestring != NULL))
+    {
+        size_t len = strlen(jaccessToken->valuestring);
+        x_access_token=(char*)malloc(sizeof(char*)*len);
+        memcpy(x_access_token, jaccessToken->valuestring, len);
+    }
+    free(json);
+    free(jdata);
+    free(jaccessToken);
+    return x_access_token;
+}
+
+int osmp_utmp_project_data_to_db(const http_response* resp)
+{
+    cJSON *json = NULL;
+    cJSON *jdata = NULL;
+    cJSON* jlists = NULL;
+    cJSON* jlist = NULL;
+    json = cJSON_Parse(resp->response);
+    if (json == NULL)
+    {
+        const char *error_ptr = cJSON_GetErrorPtr();
+        if (error_ptr != NULL)
+        {
+            fprintf(stderr, "Error before: %s\n", error_ptr);
+        }
+        return OSMP_ERR;
+    }
+    jdata = cJSON_GetObjectItemCaseSensitive(json, "data");
+    jlists = cJSON_GetObjectItemCaseSensitive(jdata, "list");
+    jlist = NULL;
+    cJSON_ArrayForEach(jlist, jlists)
+    {
+        cJSON *id = cJSON_GetObjectItemCaseSensitive(jlist, "id");
+        cJSON *projectnum = cJSON_GetObjectItemCaseSensitive(jlist, "projectnum");
+        cJSON *name = cJSON_GetObjectItemCaseSensitive(jlist, "name");
+        cJSON *status = cJSON_GetObjectItemCaseSensitive(jlist, "status");
+        cJSON *contractamount = cJSON_GetObjectItemCaseSensitive(jlist, "contractamount");
+        cJSON *income = cJSON_GetObjectItemCaseSensitive(jlist, "income");
+        cJSON *actualpayment = cJSON_GetObjectItemCaseSensitive(jlist, "actualpayment");
+
+        char* sql = (char*)malloc(sizeof(char*)*10240);
+        sprintf(sql, "insert into utmp_projectpageqrydetailinformation(id, projectnum, name ,status, contractamount, income, actualpayment) \
+            values(%d, '%s', '%s', '%s', %d, %d, %d);", id->valueint, projectnum->valuestring, name->valuestring, \
+            status->valuestring, contractamount->valueint, income->valueint, actualpayment->valueint);
+        //X_LOG_DEBUG("SQL string is %s", sql);
+        
+        // Handing mysql error 1062: Duplicate entry '' for key 'PRIMARY'
+        if ( 1062 == osmp_mysql_real_query(sql))
+        {
+            memset(sql, 0, sizeof(char*)*10240);
+            sprintf(sql, "UPATE utmp_projectpageqrydetailinformation set status='%s', contractamount=%d, income=%d, actualpayment=%d\
+                WHERE id=%d;", status->valuestring, contractamount->valueint, income->valueint, actualpayment->valueint, id->valueint);
+            //X_LOG_DEBUG("SQL string is %s", sql);
+        }
+    }
+}
 
 int help()
 {
@@ -159,83 +237,13 @@ int main(int argc, char** argv) {
         } 
         else if (*in_selection == '3') 
         {
-            char* payload = "{\"code\":\"\",\"codeUuid\":\"\",\"loginName\":\"dongjin@utry.cn\",\"loginPwd\":\"123456\"}";
-            http_response *resp = http_post("https://utmpapi.utry.cn/utmp-admin-api/session/login", NULL, payload);
-            //X_LOG_DEBUG("http_response [%d] is: %s", resp->size, resp->response);
-
+            char* payload = NULL;
             // Retrival xaccessToken
-            char *x_access_token = NULL;
-            cJSON *json = cJSON_Parse(resp->response);
-            // if (json == NULL)
-            // {
-            //     const char *error_ptr = cJSON_GetErrorPtr();
-            //     if (error_ptr != NULL)
-            //     {
-            //         fprintf(stderr, "Error before: %s\n", error_ptr);
-            //     }
-            //     continue;
-            // }
-            cJSON *jdata = cJSON_GetObjectItemCaseSensitive(json, "data");
-            //X_LOG_DEBUG("Parsed by cJSON: %s", cJSON_Print(jdata));
-            cJSON *jaccessToken = cJSON_GetObjectItemCaseSensitive(jdata, "xaccessToken");
-            if (cJSON_IsString(jaccessToken) && (jaccessToken->valuestring != NULL))
-            {
-                size_t len = strlen(jaccessToken->valuestring);
-                x_access_token=(char*)malloc(sizeof(char*)*len);
-                memcpy(x_access_token, jaccessToken->valuestring, len);
-                X_LOG_DEBUG("Checking monitor \"%s\"\n", x_access_token);
-            }
-            free(json);
-            free(jdata);
-            free(jaccessToken);
+            char *x_access_token = osmp_retrival_utmp_access_token();
 
-
-            // char *tokenVal = strstr(resp->response, "xaccessToken");
-            // tokenVal--;
-            // tokenVal = strtrim(tokenVal, '}');
-
-            // // Parsing json
-            // // +
-            // parse_json(resp->response, resp->size);
-            // // -
-
-            // char** p0 = (char**)malloc(sizeof(char**));
-            // *p0 = tokenVal;
-            
-            // char* x_access_key = strsep(p0, ":");
-            // x_access_key = strsep(p0, ":");
-            // x_access_key = strtrim(x_access_key, '\"');
-            // X_LOG_DEBUG("xaccessToken is [%d]%s\n", strlen(x_access_key), x_access_key);
-
-            payload = "{\"orders\":[],\"pageNum\":1,\"pageSize\":1000,\"queryLike\":\"\",\"ssascription\":[\"2097164\",\"2097123\",\"2097173\",\"2097177\",\"2097179\",\"2097180\",\"2341059\",\"2920991\",\"3167706\"],\"status\":[]}";
+            payload = "{\"orders\":[],\"pageNum\":1,\"pageSize\":1000,\"queryLike\":\"\",\"ssascription\":[\"2097164\",\"2097123\",\"2097173\",\"2097177\",\"2097179\",\"2097180\",\"2341059\",\"2920991\",\"3167706\"],\"status\":[]}";;
             http_response *resp1 = http_post("https://utmpapi.utry.cn//utmp-admin-api/project/page/query", x_access_token, payload);
-            json = cJSON_Parse(resp1->response);
-            if (json == NULL)
-            {
-                const char *error_ptr = cJSON_GetErrorPtr();
-                if (error_ptr != NULL)
-                {
-                    fprintf(stderr, "Error before: %s\n", error_ptr);
-                }
-                continue;
-            }
-            jdata = cJSON_GetObjectItemCaseSensitive(json, "data");
-            cJSON* jlists = cJSON_GetObjectItemCaseSensitive(jdata, "list");
-            cJSON* jlist = NULL;
-            cJSON_ArrayForEach(jlist, jlists)
-            {
-                cJSON *id = cJSON_GetObjectItemCaseSensitive(jlist, "id");
-                cJSON *name = cJSON_GetObjectItemCaseSensitive(jlist, "name");
-                //cJSON *height = cJSON_GetObjectItemCaseSensitive(jlist, "height");
-                X_LOG_DEBUG("%d %s", id->valueint, name->valuestring);
-            }
-            // for (size_t i = 1; i <= cJSON_GetArraySize(jlist); i++)
-            // {
-            //     X_LOG_DEBUG("process %d of %d", i, cJSON_GetArraySize(jlist));
-            //     cJSON* tmp = cJSON_GetArrayItem(jlist, i);
-            //     X_LOG_DEBUG("%s", cJSON_GetObjectItemCaseSensitive(tmp, "name"));
-            //     free(tmp);
-            // }
+            osmp_utmp_project_data_to_db(resp1);
             //X_LOG_DEBUG("response [%d]%s\n", resp1->size, resp1->response);
             free(resp1->response);
             free(resp1);
@@ -245,6 +253,12 @@ int main(int argc, char** argv) {
             // printf("response [%d]%s\n", resp2->size, resp2->response);
             // free(resp2->response);
             // free(resp2);
+            payload = "{\"orders\":[],\"pageNum\":2,\"pageSize\":1000,\"queryLike\":\"\",\"ssascription\":[\"2097164\",\"2097123\",\"2097173\",\"2097177\",\"2097179\",\"2097180\",\"2341059\",\"2920991\",\"3167706\"],\"status\":[]}";;
+            http_response *resp2 = http_post("https://utmpapi.utry.cn//utmp-admin-api/project/page/query", x_access_token, payload);
+            osmp_utmp_project_data_to_db(resp2);
+            //X_LOG_DEBUG("response [%d]%s\n", resp1->size, resp1->response);
+            free(resp2->response);
+            free(resp2);
         }
         else if (*in_selection == '4') 
         {

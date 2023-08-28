@@ -67,17 +67,29 @@ SQL_FIELD_NAME_FMT sql_field_fmt_str(MYSQL_RES* res)
     return field_name_fmt;
 }
 
-#define OSMP_SEPARATOR_LINE(s, n) \
-    memset(s, 45, n); s[n-1] = 0; \
-    printf("%s\n", s);
+#define OSMP_SEPARATOR_LINE(s, n) memset(s, 45, n); s[n-1] = 0; printf("%s\n", s);
+
+int osmp_mysql_real_query(const char* sql) {
+    char* host      = "rm-bp18m16y76g8d8ww2fo.mysql.rds.aliyuncs.com";
+    char* user      = "pms_user";
+    char* pwd       = "pms_user@123";
+    char* schema    = "pms_db";
+
+    MYSQL* my_conn = sql_open(host, user, pwd, schema);
+    if ( SQL_NO_QUERY_RESULT != mysql_real_query(my_conn, sql, strlen(sql)) )
+    {
+        printf("%s: %d : error [%d]: %s\n", __FILE__, __LINE__, mysql_errno(my_conn), mysql_error(my_conn));
+        return mysql_errno(my_conn);
+    }
+}
 
 
 int print_table_information(char* table_name) 
 {
-    char* host = "rm-bp18m16y76g8d8ww2fo.mysql.rds.aliyuncs.com";
-    char* user = "pms_user";
-    char* pwd = "pms_user@123";
-    char* schema = "pms_db";
+    char* host      = "rm-bp18m16y76g8d8ww2fo.mysql.rds.aliyuncs.com";
+    char* user      = "pms_user";
+    char* pwd       = "pms_user@123";
+    char* schema    = "pms_db";
     char* sql;
 
     if (table_name != NULL)
