@@ -193,7 +193,7 @@ int osmp_utmp_project_data_to_db(const http_response* resp)
 
 int help()
 {
-    printf(MENU_MAIN);
+    return printf(MENU_MAIN);
 }
 
 int main(int argc, char** argv) {
