@@ -174,18 +174,23 @@ int osmp_utmp_project_data_to_db(const http_response* resp)
         cJSON *countdown = cJSON_GetObjectItemCaseSensitive(jlist, "countdown");
 
         char* sql = (char*)malloc(sizeof(char*)*10240);
-        sprintf(sql, "insert into utmp_projectpageqrydetailinformation(id, projectnum, name ,status, contractamount, income, actualpayment, manager_name, nextmilestone, plancomplettime, countdown) \
-            values(%d, '%s', '%s', '%s', %d,  %d,  %d, '%s', '%s', '%s', '%s');", id->valueint, projectnum->valuestring, name->valuestring, \
-            status->valuestring, contractamount->valueint, income->valueint, actualpayment->valueint, managerName->valuestring, nextmilestone->valuestring, plancomplettime->valuestring, countdown->valuestring);
-        //X_LOG_DEBUG("SQL string is %s", sql);
+        sprintf(sql, 
+            "insert into utmp_projectpageqrydetailinformation(id, projectnum, name ,status, contractamount, income, actualpayment, manager_name, nextmilestone, plancomplettime, countdown) values(%d, '%s', '%s', '%s', %d,  %d,  %d, '%s', '%s', '%s', '%s');", 
+            id->valueint, projectnum->valuestring, name->valuestring, status->valuestring, 
+            contractamount->valueint, income->valueint, actualpayment->valueint, managerName->valuestring, 
+            nextmilestone->valuestring, plancomplettime->valuestring, countdown->valuestring);
+        //X_LOG_DEBUG("SQL string is:\n%s", sql);
         
         // Handing mysql error 1062: Duplicate entry '' for key 'PRIMARY'
-        if ( 1062 == osmp_mysql_real_query(sql))
+        if (1062 == osmp_mysql_real_query(sql))
         {
             memset(sql, 0, sizeof(char*)*10240);
-            sprintf(sql, "UPDATE utmp_projectpageqrydetailinformation set status='%s', contractamount=%d, income=%d, actualpayment=%d, manager_name='%s', nextmilestone='%s', plancomplettime='%s', countdown='%s' \
-                WHERE id=%d;", status->valuestring, contractamount->valueint, income->valueint, actualpayment->valueint, managerName->valuestring, nextmilestone->valuestring, plancomplettime->valuestring, countdown->valuestring, id->valueint);
-            X_LOG_DEBUG("SQL string is %s", sql);
+            sprintf(sql, 
+                "UPDATE utmp_projectpageqrydetailinformation set status='%s', contractamount=%d, income=%d, actualpayment=%d, manager_name='%s', nextmilestone='%s', plancomplettime='%s', countdown='%s' WHERE id=%d;", 
+                status->valuestring, contractamount->valueint, income->valueint, actualpayment->valueint, 
+                managerName->valuestring, nextmilestone->valuestring, plancomplettime->valuestring, 
+                countdown->valuestring, id->valueint);
+            X_LOG_DEBUG("SQL string is:\n%s", sql);
             osmp_mysql_real_query(sql);
         }
     }
