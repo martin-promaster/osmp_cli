@@ -41,72 +41,6 @@ typedef struct json_object_t {
     void* next;
 } JSON_object;
 
-void parse_json(const char* psrc, const size_t nsrc) 
-{
-    // 复制原json字符，用于后续操作
-    char* json_head = (char*)malloc(sizeof(char)*(nsrc+1));
-    char* json = json_head;
-    memset(json, 0, nsrc+1);
-    memcpy(json, psrc, nsrc+1);
-    
-    // 解析后的列表，用于存储解析后的节点信息
-    char** json_objects_head = (char**)calloc(sizeof(char*), MAX_OSMP_JSON_SIZE);
-    char** json_objects = json_objects_head;
-
-    *json_objects_head = json_head;
-    // X_LOG_DEBUG(">>>>>>>>>>>>> %s", *json_objects_head);
-    
-    int a = 0;
-    while(*json) {
-        if(*json == '{') {
-            a++;
-            *json_objects = json;
-            json_objects++;
-        } 
-        else if (*json == '[')
-        {
-            a++;
-            *json_objects = json;
-            json_objects++;
-            while (1)
-            {
-                json++;
-                if (*json != ']')
-                {
-                    continue;
-                } else {
-                    json++;
-                    break;
-                }
-            }
-            X_LOG_DEBUG("exit [] branch.");
-            X_LOG_DEBUG(">>>>>>>>>>> %s", json);
-        }
-        // X_LOG_DEBUG(">>>>>>>>>>> %s", json);
-        json++;
-    }
-
-    json_objects = json_objects_head;
-
-    int abiii=0;
-    while (*json_objects)
-    {
-        /* code */
-        X_LOG_DEBUG("+++++++++++++++++++++++++++++++++++++++++++++++");
-        X_LOG_DEBUG("%s", *json_objects);
-        json_objects++;
-        X_LOG_DEBUG("-----------------------------------------------");
-        abiii++;
-        if (abiii>10)
-        {
-            break;
-            /* code */
-        }
-    }
-    
-    X_LOG_DEBUG("%d", a);
-}
-
 char* osmp_retrival_utmp_access_token() 
 {
     char* payload = "{\"code\":\"\",\"codeUuid\":\"\",\"loginName\":\"dongjin@utry.cn\",\"loginPwd\":\"123456\"}";
@@ -215,7 +149,7 @@ int main(int argc, char** argv) {
     char* in_selection = (char*)malloc(sizeof(char)*1);
     while(1) 
     {
-        printf("OSMP CLI>>>");
+        printf("\nOSMP CLI>>> ");
         char* in_selection = (char*)malloc(sizeof(char)*1);
         scanf("%s", in_selection);
 
