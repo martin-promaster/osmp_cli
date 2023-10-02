@@ -12,17 +12,17 @@
 
 
 #define MENU_MAIN "\
------------------  OSMP utils -----------------\n\
-Welcome to use OSMP utils. Any problem, please \n\
-feel free to contact Administrator and send \n\
-email to <martin.dong@139..com> for help. \n\
----------------- Function Menu ----------------\n\
+------------------- OSMP Utils ------------------\n\
+Welcome using OSMP utils. Any problem, please \n\
+FEEL FREE to contact Administrator OR send email\n\
+to martin.dong@139.com for help. \n\
+------------------ Function Menu ----------------\n\
 1. Query and print table.\n\
-2. Print linked list information.\n\
-3. UTMP test.\n\
+2. Test suits for linked list information.\n\
+3. Run UTMP test.\n\
 4. Run default test cases.\n\
 Type 'q' or 'quit' to exit the program.\n\
-------------------------------------------------\n"
+-------------------------------------------------\n"
 
 // Please make your choice:"
 enum json_type_e {
