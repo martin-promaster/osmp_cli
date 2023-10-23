@@ -3,23 +3,24 @@
 #include <string.h>
 #include "/usr/include/mysql/mysql.h"
 #include "../include/xsql.h"
+#include "../include/xdefine.h"
 
 MYSQL* sql_open(char* host, char* user, char* pwd, char* schema) 
 {
     MYSQL* my_conn = mysql_init(NULL);
     if ( NULL == my_conn )
     {
-        printf("%s: %d : error : %s\n",__FILE__,  __LINE__, mysql_error(my_conn));
+        X_LOG_DEBUG("MySQL ERROR: %s", mysql_error(my_conn));
         exit(1);
     }
     if ( NULL == mysql_real_connect(my_conn, host, user, pwd, schema, 6033, NULL, 0) )
     {
-        printf("%s: %d : error : %s\n", __FILE__, __LINE__, mysql_error(my_conn));
+        X_LOG_DEBUG("MySQL ERROR: %s", mysql_error(my_conn));
         exit(1);
     }
     if ( 0 != mysql_set_character_set(my_conn, "utf8") )
     {
-        printf("%s: %d : error : %s\n", __FILE__, __LINE__, mysql_error(my_conn));
+        X_LOG_DEBUG("MySQL ERROR: %s", mysql_error(my_conn));
         exit(1);
     }
     return my_conn;
@@ -29,7 +30,7 @@ MYSQL_RES* sql_real_query(MYSQL* my_conn, char* my_sql)
 {
     if ( SQL_NO_QUERY_RESULT != mysql_real_query(my_conn, my_sql, strlen(my_sql)) )
     {
-        printf("%s: %d : error : %s\n", __FILE__, __LINE__, mysql_error(my_conn));
+        X_LOG_DEBUG("MySQL ERROR: %s", mysql_error(my_conn));
         return NULL;
         // exit(1);
     }
@@ -37,7 +38,7 @@ MYSQL_RES* sql_real_query(MYSQL* my_conn, char* my_sql)
     MYSQL_RES* res = mysql_store_result(my_conn);
     if (NULL == res )
     {
-        printf("%s : %d : error : %s\n", __FILE__, __LINE__, mysql_error(my_conn));
+        X_LOG_DEBUG("MySQL ERROR: %s", mysql_error(my_conn));
         exit(1);
     }
     return res;

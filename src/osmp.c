@@ -216,7 +216,7 @@ int main(int argc, char** argv) {
         }
         else 
         {
-            printf("Unrecognised command, exiti the shell, bye!\n");
+            printf("Unrecognised command. Exiting the shell, bye!\n");
             exit(0);
         }
     }
